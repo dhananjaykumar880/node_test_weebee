@@ -88,7 +88,18 @@ export class EventsService {
 
   @Get('events')
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    return Promise.all(
+      (await this.prisma.event.findMany()).map(async (event) => {
+        const workshops = await this.prisma.workshop.findMany({
+          where: { eventId: event.id },
+        });
+        return {
+          ...event,
+          workshops,
+        };
+      }),
+    );
+    // throw new Error('TODO task 1');
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
@@ -159,6 +170,28 @@ export class EventsService {
      */
   @Get('futureevents')
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    return (
+      await Promise.all(
+        (
+          await this.prisma.event.findMany()
+        ).map(async (event) => {
+          const hasFutureWorkshop = await this.prisma.workshop.findMany({
+            where: {
+              eventId: event.id,
+              start: {
+                gte: new Date(),
+              },
+            },
+          });
+          return hasFutureWorkshop.length
+            ? {
+                ...event,
+                workshops: hasFutureWorkshop,
+              }
+            : undefined;
+        }),
+      )
+    ).filter((event) => event);
+    // throw new Error('TODO task 2');
   }
 }

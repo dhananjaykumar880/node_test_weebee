@@ -38,3 +38,69 @@ model Workshop {
 
   @@map("workshops")
 }
+
+model showrooms {
+  id              Int      @id @default(autoincrement())
+  name            String
+  seatCount       Int      @default(0)
+  time            DateTime
+  isBookedForShow Boolean  @default(false)
+  seat            seat[]
+  shows           shows[]
+  createdOn       DateTime @default(now())
+  updatedOn       DateTime @default(now()) @updatedAt
+
+  @@index([isBookedForShow])
+}
+
+model seat {
+  id              Int         @id @default(autoincrement())
+  rows            Int         @default(0)
+  columns         Int         @default(0)
+  isBookedForShow Boolean     @default(false)
+  seatTypeId      Int
+  seatType        seatingType @relation(fields: [seatTypeId], references: [id])
+  showroomId      Int
+  showrooms       showrooms   @relation(fields: [showroomId], references: [id])
+  createdOn       DateTime    @default(now())
+  updatedOn       DateTime    @default(now()) @updatedAt
+  booking         booking[]
+
+  @@index([showroomId, isBookedForShow, rows, columns])
+}
+
+model seatingType {
+  id        Int      @id @default(autoincrement())
+  type      String   @default("Regular")
+  fareRate  Float    @default(0)
+  seat      seat[]
+  createdOn DateTime @default(now())
+  updatedOn DateTime @default(now()) @updatedAt
+}
+
+model shows {
+  id         Int       @id @default(autoincrement())
+  name       String
+  time       DateTime
+  price      Float
+  isBooked   Boolean   @default(false)
+  showroomId Int
+  showrooms  showrooms @relation(fields: [showroomId], references: [id])
+  createdOn  DateTime  @default(now())
+  updatedOn  DateTime  @default(now()) @updatedAt
+  booking    booking[]
+
+  @@index([showroomId, isBooked, time(sort: Desc)])
+}
+
+model booking {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  showId    Int
+  show      shows    @relation(fields: [showId], references: [id])
+  seatId    Int
+  seat      seat     @relation(fields: [seatId], references: [id])
+  createdOn DateTime @default(now())
+
+  @@index([userId])
+}
